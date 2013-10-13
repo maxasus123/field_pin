@@ -1,3 +1,3 @@
 field_pin
 =========
-This modules for drupal
+This modules for Drupal 7
