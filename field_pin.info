@@ -1,0 +1,12 @@
+name = Field Personal Identification Number (PIN)
+description = Chcek Personal Identification Number (PIN) Thailand.
+package = Hugsolution
+core = 7.x
+dependencies[] = field
+
+
+; Information added by drupal.org packaging script on 2013-10-06
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1381053291"

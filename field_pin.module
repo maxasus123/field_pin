@@ -1,0 +1,232 @@
+<?php
+/**
+ * @file
+ * An example field using the Field Types API.
+ */
+
+/***************************************************************
+ * Field Type API hooks
+ ***************************************************************/
+
+/**
+ * Implements hook_field_info().
+ *
+ * Provides the description of the field.
+ */
+function field_pin_field_info() {
+  return array(
+    // We name our field as the associative name of the array.
+    'field_pin_pinth' => array(
+      'label' => t('Personal Identification Number (PIN)'),
+      'description' => t('Chcek Personal Identification Number (PIN) Thailand.'),
+      'default_widget' => 'field_pin_text',
+      'default_formatter' => 'field_pin_default_text',
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_validate().
+ *
+ * This hook gives us a chance to validate content that's in our
+ * field. We're really only interested in the $items parameter, since
+ * it holds arrays representing content in the field we've defined.
+ * We want to verify that the items only contain RGB hex values like
+ * this: #RRGGBB. If the item validates, we do nothing. If it doesn't
+ * validate, we add our own error notification to the $errors parameter.
+ *
+ * @see field_example_field_widget_error()
+ */
+function field_pin_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
+  foreach ($items as $delta => $item) {
+    if (!empty($item['value'])) {
+      if (! preg_match('@^[0-9]{13}$@', $item['value'])) {
+        $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'field_pin_invalid',
+          'message' => t('Identification number.'),
+        );
+      }elseif (check_pin($item['value']) == false) {
+       $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'field_pin_invalid',
+          'message' => t('Identification number. You enter it incorrectly.'),
+        );
+      }
+    }
+  }
+}
+
+
+/**
+ * Implements hook_field_is_empty().
+ *
+ * hook_field_is_emtpy() is where Drupal asks us if this field is empty.
+ * Return TRUE if it does not contain data, FALSE if it does. This lets
+ * the form API flag an error when required fields are empty.
+ */
+function field_pin_field_is_empty($item, $field) {
+  return empty($item['value']);
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ *
+ * We need to tell Drupal that we have two different types of formatters
+ * for this field. One will change the text color, and the other will
+ * change the background color.
+ *
+ * @see field_example_field_formatter_view()
+ */
+function field_pin_field_formatter_info() {
+  return array(
+    // This formatter just displays the hex value in the color indicated.
+    'field_pin_default_text' => array(
+      'label' => t('Default'),
+      'field types' => array('field_pin_pinth'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ *
+ * Two formatters are implemented.
+ * - field_example_simple_text just outputs markup indicating the color that
+ *   was entered and uses an inline style to set the text color to that value.
+ * - field_example_color_background does the same but also changes the
+ *   background color of div.region-content.
+ *
+ * @see field_example_field_formatter_info()
+ */
+function field_pin_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+
+  switch ($display['type']) {
+    // This formatter simply outputs the field as text and with a color.
+    case 'field_pin_default_text':
+      foreach ($items as $delta => $item) {
+<<<<<<< HEAD
+        $element[$delta] = array('#markup' => $item['pinth']);
+=======
+        $element[$delta] = array('#markup' => $item['value']);
+>>>>>>> Update code db and modules file
+      }
+      break;
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_widget_info().
+ *
+ * Three widgets are provided.
+ * - A simple text-only widget where the user enters the '#ffffff'.
+ * - A 3-textfield widget that gathers the red, green, and blue values
+ *   separately.
+ * - A farbtastic colorpicker widget that chooses the value graphically.
+ *
+ * These widget types will eventually show up in hook_field_widget_form,
+ * where we will have to flesh them out.
+ *
+ * @see field_example_field_widget_form()
+ */
+function field_pin_field_widget_info() {
+  return array(
+    'field_pin_text' => array(
+      'label' => t('PIN Value'),
+      'field types' => array('field_pin_pinth'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_form().
+ *
+ * hook_widget_form() is where Drupal tells us to create form elements for
+ * our field's widget.
+ *
+ * We provide one of three different forms, depending on the widget type of
+ * the Form API item provided.
+ *
+ * The 'field_example_colorpicker' and 'field_example_text' are essentially
+ * the same, but field_example_colorpicker adds a javascript colorpicker
+ * helper.
+ *
+ * field_example_3text displays three text fields, one each for red, green,
+ * and blue. However, the field type defines a single text column,
+ * rgb, which needs an HTML color spec. Define an element validate
+ * handler that converts our r, g, and b fields into a simulated single
+ * 'rgb' form element.
+ */
+function field_pin_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $value = isset($items[$delta]['value']) ? $items[$delta]['value'] : '';
+
+  $widget = $element;
+  $widget['#delta'] = $delta;
+
+  switch ($instance['widget']['type']) {
+
+    // DELIBERATE fall-through: From here on the field_example_text and
+    // field_example_colorpicker are exactly the same.
+    case 'field_pin_text':
+      $widget += array(
+        '#type' => 'textfield',
+        '#default_value' => $value,
+        // Allow a slightly larger size that the field length to allow for some
+        // configurations where all characters won't fit in input field.
+        '#size' => 13,
+        '#maxlength' => 13,
+      );
+      break;
+
+  }
+
+  $element['value'] = $widget;
+  return $element;
+}
+
+
+
+/**
+ * Implements hook_field_widget_error().
+ *
+ * hook_field_widget_error() lets us figure out what to do with errors
+ * we might have generated in hook_field_validate(). Generally, we'll just
+ * call form_error().
+ *
+ * @see field_example_field_validate()
+ * @see form_error()
+ */
+function field_pin_field_widget_error($element, $error, $form, &$form_state) {
+  switch ($error['error']) {
+    case 'field_pin_invalid':
+      form_error($element, $error['message']);
+      break;
+  }
+}
+
+/**
+ * This functino check Personal Identification Number
+ * Code for http://www.webub.com/
+ */
+function check_pin($pinth_id = '') {
+  
+    $rev = strrev($pinth_id); 
+    $total = 0;
+  
+  for($i=1;$i<13;$i++) {
+      $mul = $i +1;
+      $count = $rev[$i]*$mul; 
+      $total = $total + $count; 
+  }
+  
+    $mod = $total % 11; 
+    $sub = 11 - $mod; 
+    $check_digit = $sub % 10; 
+
+  if($rev[0] == $check_digit) {  
+      return true; 
+    }else{
+      return false; 
+  }
+}
