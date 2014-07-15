@@ -104,11 +104,9 @@ function field_pin_field_formatter_view($entity_type, $entity, $field, $instance
     // This formatter simply outputs the field as text and with a color.
     case 'field_pin_default_text':
       foreach ($items as $delta => $item) {
-<<<<<<< HEAD
-        $element[$delta] = array('#markup' => $item['pinth']);
-=======
+
         $element[$delta] = array('#markup' => $item['value']);
->>>>>>> Update code db and modules file
+
       }
       break;
   }
